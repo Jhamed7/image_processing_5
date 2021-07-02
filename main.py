@@ -4,9 +4,9 @@ import numpy as np
 
 # ----------------------------------- Functions
 
-def show_pic(img):
+def show_pic(img, t=0):
     cv2.imshow('pic', img)
-    cv2.waitKey()
+    cv2.waitKey(t)
 
 
 def convolution(img, mask):
@@ -45,11 +45,11 @@ def convolution_n(img, scale):
 if __name__ == "__main__":
 
     # question 2
-    image_lion = cv2.imread('q2/lion.png', cv2.IMREAD_GRAYSCALE)
-    mask_ = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]])
-    out_lion = convolution(image_lion, mask=mask_)
-    cv2.imwrite('q2/lion_masked.jpg', out_lion)
-    show_pic(out_lion)
+    # image_lion = cv2.imread('q2/lion.png', cv2.IMREAD_GRAYSCALE)
+    # mask_ = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]])
+    # out_lion = convolution(image_lion, mask=mask_)
+    # cv2.imwrite('q2/lion_masked.jpg', out_lion)
+    # show_pic(out_lion)
     # --------------------------------------------------------------
 
     # question 3
@@ -69,37 +69,59 @@ if __name__ == "__main__":
     # --------------------------------------------------------------
 
     # question 5
-    # video = cv2.VideoCapture(0)
-    #
-    # while True:
-    #     flag, frame = video.read()
-    #     if flag:
-    #         gray_image = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-    #         # print(gray_image.shape)
-    #
-    #         rows, cols = gray_image.shape
-    #         center = (round(rows / 2), round(cols / 2))
-    #         sub_frame = gray_image[center[1] - 30:center[1] + 30, center[0] - 30: center[0] + 30]
-    #
-    #         # frame = convolution_n(gray_image, 15)
-    #         frame = cv2.GaussianBlur(gray_image, (31, 31), 30)
-    #
-    #         # -----------
-    #         sub_frame_masked = convolution_n(sub_frame, 7)
-    #         print(np.mean(sub_frame_masked))
-    #         if np.mean(sub_frame_masked) < 50:
-    #             text = 'Black'
-    #         elif 50 < np.mean(sub_frame_masked) < 100:
-    #             text = 'Gray'
-    #         else:
-    #             text = 'White'
-    #
-    #         frame = cv2.putText(frame, text, (20, 40), cv2.FONT_HERSHEY_SIMPLEX,
-    #                             1, (0, 255, 0), 2, cv2.LINE_AA)
-    #
-    #         frame[center[1] - 30:center[1] + 30, center[0] - 30: center[0] + 30] = sub_frame
-    #         cv2.rectangle(frame, (center[0] + 30, center[1] + 30), (center[0] - 30, center[1] - 30), color=(0, 255, 0),
-    #                       thickness=3)
-    #         show_pic(frame, 1)
-    #     else:
-    #         break
+    video = cv2.VideoCapture(0)
+
+    v_w = int(video.get(3))
+    v_h = int(video.get(4))
+    # v_w = video.get(cv2.CAP_PROP_FRAME_WIDTH)
+    # v_h = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    # fps = video.get(cv2.cv2.CAP_PROP_FPS)
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    writer = cv2.VideoWriter('captured.mp4', fourcc, 20.0, (v_w, v_h))  #   0x7634706d
+
+    while True:
+        flag, frame = video.read()
+
+        # Wait for 'q' key to stop the program
+        if cv2.waitKey(1) == ord('q'):
+            break
+
+        if flag:
+            gray_image = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+            # print(gray_image.shape)
+
+            rows, cols = gray_image.shape
+            center = (round(rows / 2), round(cols / 2))
+            sub_frame = gray_image[center[1] - 30:center[1] + 30, center[0] - 30: center[0] + 30]
+
+            # frame = convolution_n(gray_image, 15)
+            frame = cv2.GaussianBlur(gray_image, (31, 31), 30)
+
+            # -----------
+            sub_frame_masked = convolution_n(sub_frame, 7)
+            print(np.mean(sub_frame_masked))
+            if np.mean(sub_frame_masked) < 50:
+                text = 'Black'
+            elif 50 < np.mean(sub_frame_masked) < 100:
+                text = 'Gray'
+            else:
+                text = 'White'
+
+            frame = cv2.putText(frame, text, (20, 40), cv2.FONT_HERSHEY_SIMPLEX,
+                                1, (0, 255, 0), 2, cv2.LINE_AA)
+
+            frame[center[1] - 30:center[1] + 30, center[0] - 30: center[0] + 30] = sub_frame
+            cv2.rectangle(frame, (center[0] + 30, center[1] + 30), (center[0] - 30, center[1] - 30), color=(0, 255, 0),
+                          thickness=3)
+
+            show_pic(frame, 1)
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
+            writer.write(frame)
+
+
+        else:
+            break
+
+    video.release()
+    writer.release()
+    cv2.destroyAllWindows()
